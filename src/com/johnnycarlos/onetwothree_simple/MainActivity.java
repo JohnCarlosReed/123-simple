@@ -16,11 +16,11 @@ import android.widget.ImageView;
 
 
 public class MainActivity extends Activity implements 
-GestureDetector.OnGestureListener,
-GestureDetector.OnDoubleTapListener{
+    GestureDetector.OnGestureListener,
+    GestureDetector.OnDoubleTapListener{
     
-    private static final String DEBUG_TAG = "Gestures";
     private static final int SWIPE_MIN_DISTANCE = 120;
+    
     private static final int SWIPE_THRESHOLD_VELOCITY = 200;
     
     private GestureDetectorCompat mDetector; 
@@ -52,16 +52,11 @@ GestureDetector.OnDoubleTapListener{
         loadSoundImages();
        
         imageView = (ImageView)findViewById(R.id.main_image_id);
-        
-        Log.d( DEBUG_TAG, "onCreate" );
 
     } 
-
-   
    
     /**
-     * This method loads all the sound files into global integers(a,b,c, etc) that represent
-     * their location in the soundPool.
+     * This method loads all the SoundImages into a global array.
      */
     private void loadSoundImages(){
         try{
@@ -108,75 +103,75 @@ GestureDetector.OnDoubleTapListener{
     @Override 
     public boolean onTouchEvent(MotionEvent event){ 
         this.mDetector.onTouchEvent(event);
-        // Be sure to call the superclass implementation
-        
         return super.onTouchEvent(event);
     }
 
     @Override
     public boolean onDown(MotionEvent event) { 
-        Log.d(DEBUG_TAG,"onDown: " + event.toString()); 
         return true;
     }
 
     @Override
     public boolean onFling(MotionEvent e1, MotionEvent e2, 
     float velocityX, float velocityY) {
-        Log.d(DEBUG_TAG, "onFling: " + e1.toString()+e2.toString());
-    if(e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE &&
+        
+        if(e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE &&
             Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
-        //From Right to Left
-        playNextSoundImage();
-        return true;
-    }  else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE &&
+            
+            //From Right to Left
+            playNextSoundImage();
+            
+            return true;
+        } else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE &&
             Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
-        //From Left to Right
-                playPreviousSoundImage();
-                return true;
-            }
-      
-            if(e1.getY() - e2.getY() > SWIPE_MIN_DISTANCE &&
-                   Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY) {
-                //From Bottom to Top
-        playNextSoundImage();
-        return true;
-    }  else if (e2.getY() - e1.getY() > SWIPE_MIN_DISTANCE &&
-           Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY) {
-        //From Top to Bottom
+            
+            //From Left to Right
             playPreviousSoundImage();
+            
             return true;
         }
+      
+        if(e1.getY() - e2.getY() > SWIPE_MIN_DISTANCE &&
+           Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY) {
+            
+            //From Bottom to Top
+            playNextSoundImage();
+        
+            return true;
+        
+        } else if (e2.getY() - e1.getY() > SWIPE_MIN_DISTANCE &&
+            Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY) {
+            
+            //From Top to Bottom
+            playPreviousSoundImage();
+            
+            return true;
+        }
+    
         return false;
     }
 
     @Override
     public void onLongPress(MotionEvent event) {
-        Log.d(DEBUG_TAG, "onLongPress: " + event.toString()); 
     }
 
     @Override
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
-             float distanceY) {
-        Log.d(DEBUG_TAG, "onScroll: " + e1.toString()+e2.toString());
+                            float distanceY) {
         return true;
     }
 
     @Override
     public void onShowPress(MotionEvent event) {
-        Log.d(DEBUG_TAG, "onShowPress: " + event.toString());
     }
 
     @Override
     public boolean onSingleTapUp(MotionEvent event) {
-        Log.d(DEBUG_TAG, "onSingleTapUp: " + event.toString());
-         
-            return true;
-        }
-     
+        return true;
+    }
 
-        @Override
-        public boolean onDoubleTap(MotionEvent event) {
-            Log.d(DEBUG_TAG, "onDoubleTap: " + event.toString());
+    @Override
+    public boolean onDoubleTap(MotionEvent event) {
         
         playPreviousSoundImage();
                 
@@ -200,8 +195,11 @@ GestureDetector.OnDoubleTapListener{
     public void playPreviousSoundImage(){
         
         index--;
+        
+        // If we reach beginning of SoundImage array, loop back to the end
+        // subtract one to account for zero based array
         if( index < 0){
-            index = 9;
+            index = ( soundImages.length - 1 );
         }
             
         soundImage = soundImages[index];
@@ -215,24 +213,24 @@ GestureDetector.OnDoubleTapListener{
         }
         
     
-        public void playNextSoundImage(){
+    public void playNextSoundImage(){
             
-            index++;
-            if( index == 10){
-                index = 0;
-            }          
+        index++;
             
-            soundImage = soundImages[index];
+        // If we reach the last SoundImage, go back to beginning
+        if( index == soundImages.length ){
+            index = 0;
+        }          
             
-            // Draw the current letter
-            Drawable image = getResources().getDrawable( soundImage.imageNumber );
-            imageView.setImageDrawable(image);
+        soundImage = soundImages[index];
+            
+        // Draw the current letter
+        Drawable image = getResources().getDrawable( soundImage.imageNumber );
+        imageView.setImageDrawable(image);
 
+        // Play the current sound
+        soundPool.play(soundImage.poolNumber, 1, 1, 0, 0, 1);
 
-            
-            // Play the current sound
-            soundPool.play(soundImage.poolNumber, 1, 1, 0, 0, 1);
-
-        }
+    }
 
 } // end class

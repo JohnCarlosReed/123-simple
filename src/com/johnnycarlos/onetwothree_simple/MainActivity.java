@@ -95,7 +95,7 @@ public class MainActivity extends Activity implements
 
             soundImages = new SoundImage[]{ n1, n2, n3, n4, n5, n6, n7, n8, n9, n10 };
         } 
-        catch(IOException e) {
+        catch(Exception e) {
            Log.d("loadSoundFiles Exception:", e.toString());
         }
     }

@@ -1,8 +1,8 @@
 package com.johnnycarlos.onetwothree_simple;
 
-import java.io.IOException;
 import android.media.AudioManager;
 import android.media.SoundPool;
+import android.media.SoundPool.OnLoadCompleteListener;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.res.AssetFileDescriptor;
@@ -13,7 +13,6 @@ import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.widget.ImageView;
-
 
 public class MainActivity extends Activity implements 
     GestureDetector.OnGestureListener,
@@ -34,6 +33,8 @@ public class MainActivity extends Activity implements
     private SoundImage[] soundImages;
     
     private int index = -1;
+    
+    private int bgStreamID;
               
 
     @Override
@@ -50,11 +51,48 @@ public class MainActivity extends Activity implements
         soundPool = new SoundPool(20, AudioManager.STREAM_MUSIC, 0);
 
         loadSoundImages();
+        
+        loadBackgroundMusic();
        
         imageView = (ImageView)findViewById(R.id.main_image_id);
 
     } 
    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        soundPool.resume(bgStreamID);
+    }
+    
+    @Override
+    protected void onPause() {
+        super.onPause();        
+        soundPool.pause(bgStreamID);
+    }
+    
+    private void loadBackgroundMusic(){
+        
+        try {
+
+            AssetManager assetManager = getAssets();
+            AssetFileDescriptor descriptor;            
+            descriptor = assetManager.openFd("background_music.ogg");
+            final int bgSound = soundPool.load(descriptor, 1);
+        
+            soundPool.setOnLoadCompleteListener(new OnLoadCompleteListener() {
+                @Override
+                public void onLoadComplete(SoundPool soundPool, int sampleId,
+                    int status) {
+                    //play sound loop
+                    bgStreamID = soundPool.play(bgSound, 1, 1, 0, -1, 1);                    
+                }
+            });
+             
+        } catch (Exception e) {
+            Log.d("loadBackgroundMusic Exception:", e.toString());
+        }
+    }
+    
     /**
      * This method loads all the SoundImages into a global array.
      */

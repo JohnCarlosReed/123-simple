@@ -1,8 +1,13 @@
 package com.johnnycarlos.onetwothree_simple;
 
+import java.io.IOException;
+
+import com.johnnycarlos.onetwothree_simple.R;
+
 import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.media.SoundPool;
-import android.media.SoundPool.OnLoadCompleteListener;
+import android.net.Uri;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.res.AssetFileDescriptor;
@@ -16,7 +21,8 @@ import android.widget.ImageView;
 
 public class MainActivity extends Activity implements 
     GestureDetector.OnGestureListener,
-    GestureDetector.OnDoubleTapListener{
+    GestureDetector.OnDoubleTapListener,
+    MediaPlayer.OnPreparedListener {
     
     private static final int SWIPE_MIN_DISTANCE = 120;
     
@@ -34,7 +40,7 @@ public class MainActivity extends Activity implements
     
     private int index = -1;
     
-    private int bgStreamID;
+    MediaPlayer mediaPlayer = null;
               
 
     @Override
@@ -43,54 +49,58 @@ public class MainActivity extends Activity implements
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
+        
+        loadBackgroundMusic();
+        
+        loadSoundImages();
+        
+        imageView = (ImageView)findViewById(R.id.main_image_id);
 
         mDetector = new GestureDetectorCompat(this,this);
 
         mDetector.setOnDoubleTapListener(this);
         
-        soundPool = new SoundPool(20, AudioManager.STREAM_MUSIC, 0);
-
-        loadSoundImages();
-        
-        loadBackgroundMusic();
-       
-        imageView = (ImageView)findViewById(R.id.main_image_id);
-
     } 
    
     @Override
     protected void onResume() {
-        super.onResume();
-        soundPool.resume(bgStreamID);
+        super.onResume();        
+        mediaPlayer.start();
     }
-    
+     
     @Override
     protected void onPause() {
-        super.onPause();        
-        soundPool.pause(bgStreamID);
+        super.onPause();
+        mediaPlayer.pause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onStop();
+        mediaPlayer.release();
+        mediaPlayer = null;
+    }
+   
+    @Override
+    public void onPrepared(MediaPlayer mediaPlayer) {
+        this.mediaPlayer.start();   
     }
     
     private void loadBackgroundMusic(){
+
+        mediaPlayer = new MediaPlayer();
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         
         try {
-
-            AssetManager assetManager = getAssets();
-            AssetFileDescriptor descriptor;            
-            descriptor = assetManager.openFd("background_music.ogg");
-            final int bgSound = soundPool.load(descriptor, 1);
-        
-            soundPool.setOnLoadCompleteListener(new OnLoadCompleteListener() {
-                @Override
-                public void onLoadComplete(SoundPool soundPool, int sampleId,
-                    int status) {
-                    //play sound loop
-                    bgStreamID = soundPool.play(bgSound, 1, 1, 0, -1, 1);                    
-                }
-            });
-             
-        } catch (Exception e) {
-            Log.d("loadBackgroundMusic Exception:", e.toString());
+            mediaPlayer.setDataSource(this, Uri.parse("android.resource://com.johnnycarlos.onetwothree_simple/" +
+                                                       R.raw.background_music));
+        } catch (IOException e) {
+            Log.d("MediaPlayer Exception:", e.toString());
         }
+        
+        mediaPlayer.setLooping(true);
+        mediaPlayer.setVolume((float).3, (float).3);
+        mediaPlayer.prepareAsync();
     }
     
     /**
@@ -98,6 +108,9 @@ public class MainActivity extends Activity implements
      */
     private void loadSoundImages(){
         try{
+            
+            soundPool = new SoundPool(4, AudioManager.STREAM_MUSIC, 0);
+            
             AssetManager assetManager = getAssets();
             AssetFileDescriptor descriptor;
             
